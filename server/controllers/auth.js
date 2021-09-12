@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const ErrorResponse = require('../utils/errorResponse')
 
 
 exports.register = async (req,res,next) =>{
@@ -14,35 +15,25 @@ exports.register = async (req,res,next) =>{
             })
 
       }catch(err){
-          res.status(400).json({
-              success:false,
-              message:err.message
-          })
+         next(err)
       }
 }
 
 exports.login = async(req,res,next) =>{
     const {email,password} = req.body
     if(!email || !password){
-        res.status(404).json({
-            success:false,
-            message:'Please provide email and password'
-        })
+       return next(new ErrorResponse('Please provide email and password',400))
+
     }
     try{
         const user = await User.findOne({email}).select('+password')
         if(!user){
-            res.status(404).json({
-                success:false,
-                message:'User does not exist'
-            })
+            return next(new ErrorResponse('Invalid Credentials',401))
+
         }
         const isMatch = await user.matchPassword(password)
         if(!isMatch){
-            res.status(404).json({
-                success:false,
-                message:'Incorrect Password'
-            })
+            return next(new ErrorResponse('Invalid Credentials',401))
         }
         res.status(201).json({
             success:true,
