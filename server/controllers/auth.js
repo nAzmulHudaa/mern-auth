@@ -21,8 +21,40 @@ exports.register = async (req,res,next) =>{
       }
 }
 
-exports.login = (req,res,next) =>{
-    res.send('Login Route')
+exports.login = async(req,res,next) =>{
+    const {email,password} = req.body
+    if(!email || !password){
+        res.status(404).json({
+            success:false,
+            message:'Please provide email and password'
+        })
+    }
+    try{
+        const user = await User.findOne({email}).select('+password')
+        if(!user){
+            res.status(404).json({
+                success:false,
+                message:'User does not exist'
+            })
+        }
+        const isMatch = await user.matchPassword(password)
+        if(!isMatch){
+            res.status(404).json({
+                success:false,
+                message:'Incorrect Password'
+            })
+        }
+        res.status(201).json({
+            success:true,
+            token:"ttdsaaddaas",
+            message:'User Logged In Successfully'
+        })
+    }catch(err){
+        res.status(500).json({
+            success:false,
+            message:err.message
+        })
+    }
 }
 
 exports.forgotPassword = (req,res,next) =>{
